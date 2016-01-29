@@ -92,9 +92,9 @@ class Post():
 
 
 class FacebookBot(webdriver.PhantomJS):
-    def __init__(self, images=False, pathToPhantomJs=None):
-        #pathToPhantomJs = "E:\\ProgramFiles2\\phantomjs-2.0.0-windows\\bin\\phantomjs.exe"
-        relativePhatomJs = "\\phantomjs.exe"
+    def __init__(self):
+        # pathToPhantomJs = "E:\\ProgramFiles2\\phantomjs-2.0.0-windows\\bin\\phantomjs.exe"
+        """relativePhatomJs = "\\phantomjs.exe"
         service_args = None
         if images == False:
             service_args = ['--load-images=no', ]
@@ -102,8 +102,9 @@ class FacebookBot(webdriver.PhantomJS):
             path = self, os.getcwd() + relativePhatomJs
         else:
             path = pathToPhantomJs
-        #webdriver.PhantomJS.__init__(self, path, service_args=service_args)
-            webdriver.PhantomJS.__init__(self)
+            webdriver.PhantomJS.__init__(self, path, service_args=service_args)
+        """
+        webdriver.PhantomJS.__init__(self)
 
     def get(self, url):
         super().get(mfacebookToBasic(url))
@@ -187,7 +188,8 @@ class FacebookBot(webdriver.PhantomJS):
                     post.time = p.find_element_by_tag_name("abbr").text
                     post.privacy = self.title  # p.text.split("· ")[1].split("\n")[0]
                     post.posterLink = a[0].get_attribute('href')
-                    post.linkToComment = a[2].get_attribute('href')  # p.find_element_by_class_name("du").get_attribute('href')
+                    post.linkToComment = a[2].get_attribute(
+                        'href')  # p.find_element_by_class_name("du").get_attribute('href')
                     post.linkToLike = a[4].get_attribute('href')
                     try:
                         post.numComents = int(a[5].text.split(" ")[0])
@@ -303,4 +305,18 @@ class FacebookBot(webdriver.PhantomJS):
         self.find_element_by_name("Send").click()
         return self.getScrenshotName("MessageTo_" + name, screenshot, screenshotPath)
 
-
+    def getGroups(self):
+        url = "https://m.facebook.com/groups/?seemore"
+        g = {"name": ("url", 0)}
+        self.get(url)
+        br = self.find_elements_by_class_name("br")
+        for b in br:
+            try:
+                notis = int(b.text[-2:])
+                group_name = b.text[:-2]
+            except ValueError:
+                group_name = b.text
+                notis = 0
+            link = b.find_element_by_tag_name("a").get_attribute('href')
+            g[group_name] = (mfacebookToBasic(link), notis)
+        return g
