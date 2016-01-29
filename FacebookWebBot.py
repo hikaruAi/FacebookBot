@@ -307,7 +307,8 @@ class FacebookBot(webdriver.PhantomJS):
 
     def getGroups(self):
         url = "https://m.facebook.com/groups/?seemore"
-        g = {"name": ("url", 0)}
+        # g = {"name": ("url", 0)}
+        g = dict()
         self.get(url)
         br = self.find_elements_by_class_name("br")
         for b in br:
@@ -319,4 +320,27 @@ class FacebookBot(webdriver.PhantomJS):
                 notis = 0
             link = b.find_element_by_tag_name("a").get_attribute('href')
             g[group_name] = (mfacebookToBasic(link), notis)
+        return g
+
+    def getSuggestedGroups(self, sendrequest=False):
+        """
+        return {groupName:(description,linkToGroup,linkTorequest)}"""
+        url = "https://m.facebook.com/groups/"
+        g = dict()
+        self.get(url)
+        bq = self.find_elements_by_class_name("bq")[-1]
+        li = bq.find_elements_by_tag_name("li")
+        for l in li:
+            nombre = l.find_elements_by_tag_name("td")[0].find_elements_by_tag_name("a")[0].text
+            description = l.find_elements_by_tag_name("td")[0].find_elements_by_class_name("bx")[0].text
+            linkToGroup = l.find_elements_by_tag_name("td")[0].find_element_by_tag_name("a").get_attribute('href')
+            linkToRequest = l.find_elements_by_tag_name("td")[-1].find_element_by_tag_name("a").get_attribute('href')
+            g[nombre] = (description, linkToGroup, linkToRequest)
+        if sendrequest:
+            for r in g:
+                try:
+                    self.get(g[r][2])
+                    print("Request to group: ", r)
+                except Exception:
+                    print("Fail to send request to: ", r)
         return g
