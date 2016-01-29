@@ -4,8 +4,6 @@ from selenium.webdriver.common.keys import Keys
 import time
 import os, base64, json
 
-mantequilla = "https://mbasic.facebook.com/groups/841529052584872"
-aw = "https://mbasic.facebook.com/groups/830198010427436"
 selfProfile = "https://mbasic.facebook.com/profile.php?fref=pb"
 
 
