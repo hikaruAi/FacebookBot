@@ -60,3 +60,14 @@ target/
 
 #Ipython Notebook
 .ipynb_checkpoints
+/.idea/
+/ListWebTemplate/
+/TEMPLATE/
+/phantomjs.exe
+/loginInfo.py
+/ListWebTemplate.wbs
+/FacebookBot.py
+/writehtml.py
+
+/Test.py
+/test.html
