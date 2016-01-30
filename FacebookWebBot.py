@@ -135,7 +135,7 @@ class FacebookBot(webdriver.PhantomJS):
         return self.getScrenshotName("Logout_", screenshot, screenshotPath)
 
 
-    def postText(self, text, screenshot=True, screenshotPath="\\"):
+    def postTextToTimeline(self, text, screenshot=True, screenshotPath="\\"):
         url = "https://mbasic.facebook.com/"
         self.get(url)
         textbox = self.find_element_by_name("xc_message")
@@ -279,7 +279,7 @@ class FacebookBot(webdriver.PhantomJS):
         # print(len(members))
         return members
 
-    def addFriend(self, url):
+    def sendFriendRequest(self, url):
         self.get(url)
         try:
             bz = self.find_element_by_class_name("bz")
@@ -306,6 +306,8 @@ class FacebookBot(webdriver.PhantomJS):
         return self.getScrenshotName("MessageTo_" + name, screenshot, screenshotPath)
 
     def getGroups(self):
+        """
+        return {Str: groupName:(Str: urlToGroup, Int: numberOfNotificactions)}"""
         url = "https://m.facebook.com/groups/?seemore"
         # g = {"name": ("url", 0)}
         g = dict()

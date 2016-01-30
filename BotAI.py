@@ -131,7 +131,7 @@ def addAll():
     global bot, grups, peopleList
     for p in peopleList:
         try:
-            bot.addFriend(p.profileLink)
+            bot.sendFriendRequest(p.profileLink)
             print("Added: ", p.name)
         except Exception:
             print("Fail to add: ", p.name)
