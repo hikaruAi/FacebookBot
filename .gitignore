@@ -72,3 +72,8 @@ target/
 /Test.py
 /test.html
 *.jpg
+/botWeb/
+/Build2.py
+/RefreshExternalS.py
+/SpamBot.pyw
+/TextUtils.py
