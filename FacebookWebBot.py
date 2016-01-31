@@ -141,6 +141,7 @@ class FacebookBot(webdriver.PhantomJS):
         textbox = self.find_element_by_name("xc_message")
         textbox.send_keys(text)
         submit = self.find_element_by_name("view_post")
+        submit.click()
         return self.getScrenshotName("Post_", screenshot, screenshotPath)
 
 
@@ -173,7 +174,7 @@ class FacebookBot(webdriver.PhantomJS):
         posts = []
         for n in range(deep):
             for i in ids:
-                print(i)
+                #print(i)
                 post = Post()
                 try:
                     p = self.find_element_by_id("u_0_" + str(i))
@@ -205,9 +206,10 @@ class FacebookBot(webdriver.PhantomJS):
                 more = self.find_element_by_class_name("dm").find_elements_by_tag_name("a")[0].get_attribute('href')
                 self.get(more)
             except Exception:
-                print("can't get more :(")
-        return posts, self.getScrenshotName("PostsIn" + self.title, screenshot, screenshotPath)
-
+                pass
+                #print("can't get more :(")
+        #return posts, self.getScrenshotName("PostsIn" + self.title, screenshot, screenshotPath)
+        return posts
 
     def postInGroup(self, groupURL, text, screenshot=False, screenshotPath="\\"):
         self.get(groupURL)
@@ -244,12 +246,14 @@ class FacebookBot(webdriver.PhantomJS):
         return True
 
     def commentInPost(self, postUrl, text, screenshot=True, screenshotPath="\\"):
-        self.get(postUrl)
-        tb = self.find_element_by_name("comment_text")
-        tb.send_keys(text)
-        tb.send_keys(Keys.ENTER)
-        return self.getScrenshotName("CommentingIn_" + self.title, screenshot, screenshotPath)
-
+        try:
+            self.get(postUrl)
+            tb = self.find_element_by_name("comment_text")
+            tb.send_keys(text)
+            tb.send_keys(Keys.ENTER)
+            return self.getScrenshotName("CommentingIn_" + self.title, screenshot, screenshotPath)
+        except Exception as e:
+            print("Can't comment in ",postUrl,"\n->",e)
     def getGroupMembers(self, url, deep=3, start=0):
         seeMembersUrl = url + "?view=members&amp;refid=18"
         groupId = url.split("groups/")[1]
@@ -320,8 +324,11 @@ class FacebookBot(webdriver.PhantomJS):
             except ValueError:
                 group_name = b.text
                 notis = 0
-            link = b.find_element_by_tag_name("a").get_attribute('href')
-            g[group_name] = (mfacebookToBasic(link), notis)
+            try:
+                link = b.find_element_by_tag_name("a").get_attribute('href')
+                g[group_name] = (mfacebookToBasic(link), notis)
+            except Exception as e:
+                print("Can't get group link")
         return g
 
     def getSuggestedGroups(self, sendrequest=False):
