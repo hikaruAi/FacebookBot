@@ -6,23 +6,11 @@ import os, base64, json
 
 selfProfile = "https://mbasic.facebook.com/profile.php?fref=pb"
 
-
-def toBase64(s):
-    b = bytes(s, "utf-8")
-    s64 = base64.b64encode(b)
-    return str(s64).replace("b'", "")
-
-
-def getWelcome64():
-    s = "Unit active at " + str(time.time())
-    b = bytes(s, "utf-8")
-    s64 = base64.b64encode(b)
-    return str(s64).replace("b'", "")
-
-
 def mfacebookToBasic(url):
     if "m.facebook.com" in url:
         return url.replace("m.facebook.com", "mbasic.facebook.com")
+    elif "www.facebook.com" in url:
+        return url.replace("www.facebook.com","mbasic.facebook.com")
     else:
         return url
 
@@ -126,7 +114,14 @@ class FacebookBot(webdriver.PhantomJS):
         pass_element = self.find_element_by_name("pass")
         pass_element.send_keys(password)
         pass_element.send_keys(Keys.ENTER)
-        return self.getScrenshotName("Login_", screenshot, screenshotPath)
+        try:
+            self.find_element_by_name("xc_message")
+            print("Logged in")
+            return True
+        except NoSuchElementException as e:
+            print("Fail to log in")
+            return False
+        
 
 
     def logout(self, screenshot=True, screenshotPath="\\"):
@@ -142,7 +137,13 @@ class FacebookBot(webdriver.PhantomJS):
         textbox.send_keys(text)
         submit = self.find_element_by_name("view_post")
         submit.click()
-        return self.getScrenshotName("Post_", screenshot, screenshotPath)
+        try: 
+            self.find_element_by_id("m_home_notice")
+            print("Text posted")
+            return True
+        except NoSuchElementException as e:
+            print("Failed to post")
+            return False
 
 
     def newMessageToFriend(self, friendname, message, image1=None, image2=None, image3=None, screenshot=True,
@@ -353,3 +354,35 @@ class FacebookBot(webdriver.PhantomJS):
                 except Exception:
                     print("Fail to send request to: ", r)
         return g
+    def getPostInProfile(self,profileURL,deep=100,moreText="Mostrar"):
+        pList=list()
+        self.get(profileURL)
+        #DEEP1
+        for d in range (deep):
+            try:
+                print("DEEP ",d)
+                for i in (3,4,5,6,7):
+                    try:
+                        e=self.find_element_by_id("u_0_" + str(i))
+                        tU=str( e.text.encode('utf-8').decode('ascii', 'ignore'))
+                    except Exception:
+                        continue
+                    try:
+                        tspl=tU.split(self.title)[1].split("\n")[:-3]
+                    except IndexError:
+                        continue 
+                    tFi=""
+                    for k in tspl:
+                        tFi+=k
+                    if "shared" in tFi or "comparti" in tFi or "compartio" in tFi:
+                        continue
+                    pList.append(tFi)
+                    print(d,"-",i,"-\n",tFi)
+                ###press more
+                al=self.find_element_by_partial_link_text(moreText)
+                link=al.get_attribute('href')
+                self.get(link)
+            except:
+                pass
+            self.save_screenshot(os.path.join("screen","capture_"+str(d)+".png"))
+        return pList
