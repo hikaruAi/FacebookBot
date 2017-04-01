@@ -88,3 +88,17 @@ target/
 /JuanSim.py
 /RunJuanSim
 /Test.png
+/GetJanisPost
+/GetJanisPosts.py
+/GetJuanPost
+/GetJuanPosts.py
+/GetQuejas
+/GetQuejas.py
+/SimulateJanis
+/SimulateJanis.py
+/SimulateQuejas
+/SimulateQuejas.py
+/SimulateUser
+/SimulateUser.py
+/janis.txt
+/quejas.txt

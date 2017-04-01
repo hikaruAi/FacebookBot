@@ -1,8 +1,9 @@
+# coding: utf-8
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.keys import Keys
 import time
-import os, base64, json
+import os, base64, json, random
 
 selfProfile = "https://mbasic.facebook.com/profile.php?fref=pb"
 
@@ -130,8 +131,7 @@ class FacebookBot(webdriver.PhantomJS):
         return self.getScrenshotName("Logout_", screenshot, screenshotPath)
 
 
-    def postTextToTimeline(self, text, screenshot=True, screenshotPath="\\"):
-        url = "https://mbasic.facebook.com/"
+    def postTextToURL(self, text, url):
         self.get(url)
         textbox = self.find_element_by_name("xc_message")
         textbox.send_keys(text)
@@ -145,7 +145,9 @@ class FacebookBot(webdriver.PhantomJS):
             print("Failed to post")
             return False
 
-
+def postTextToTimeline(self, text):
+        url = "https://mbasic.facebook.com/"
+        return self.postTextToURL(text,url)
     def newMessageToFriend(self, friendname, message, image1=None, image2=None, image3=None, screenshot=True,
                            screenshotPath="\\"):
         url = "https://mbasic.facebook.com/friends/selector/?return_uri=%2Fmessages%2Fcompose%2F&cancel_uri=https%3A%2F%2Fm.facebook.com%2Fmessages%2F&friends_key=ids&context=select_friend_timeline&refid=11"
@@ -358,13 +360,13 @@ class FacebookBot(webdriver.PhantomJS):
         pList=list()
         self.get(profileURL)
         #DEEP1
+        n=0
         for d in range (deep):
             try:
-                print("DEEP ",d)
                 for i in (3,4,5,6,7):
                     try:
                         e=self.find_element_by_id("u_0_" + str(i))
-                        tU=str( e.text.encode('utf-8').decode('ascii', 'ignore'))
+                        tU=str( e.text)
                     except Exception:
                         continue
                     try:
@@ -376,9 +378,14 @@ class FacebookBot(webdriver.PhantomJS):
                         tFi+=k
                     if "shared" in tFi or "comparti" in tFi or "compartio" in tFi:
                         continue
-                    pList.append(tFi)
-                    print(d,"-",i,"-\n",tFi)
+                    if tFi not in pList:
+                        pList.append(tFi)
+                        n+=1
+                        print(n,"-\n",tFi)
+                    else:
+                        continue
                 ###press more
+                
                 al=self.find_element_by_partial_link_text(moreText)
                 link=al.get_attribute('href')
                 self.get(link)
