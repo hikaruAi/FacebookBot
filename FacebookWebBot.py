@@ -145,11 +145,10 @@ class FacebookBot(webdriver.PhantomJS):
             print("Failed to post")
             return False
 
-def postTextToTimeline(self, text):
+    def postTextToTimeline(self, text):
         url = "https://mbasic.facebook.com/"
         return self.postTextToURL(text,url)
-    def newMessageToFriend(self, friendname, message, image1=None, image2=None, image3=None, screenshot=True,
-                           screenshotPath="\\"):
+    def newMessageToFriend(self, friendname, message, image1=None, image2=None, image3=None):
         url = "https://mbasic.facebook.com/friends/selector/?return_uri=%2Fmessages%2Fcompose%2F&cancel_uri=https%3A%2F%2Fm.facebook.com%2Fmessages%2F&friends_key=ids&context=select_friend_timeline&refid=11"
         self.get(url)
         q = self.find_element_by_name("query")
@@ -169,7 +168,7 @@ def postTextToTimeline(self, text):
         if image3 != None: f3.send_keys(image3)
         send = self.find_element_by_name("Send")
         send.send_keys(Keys.ENTER)
-        return self.getScrenshotName("MessageTo_" + friendname, screenshot, screenshotPath)
+        return True
 
     def getPostInGroup(self, url, deep=2, screenshot=True, screenshotPath="\\"):
         self.get(url)
