@@ -3,11 +3,14 @@ from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.keys import Keys
 import time
-import os, base64, json, random
+import os, json
 
 selfProfile = "https://mbasic.facebook.com/profile.php?fref=pb"
 
 def mfacebookToBasic(url):
+    """Reformat a url to load mbasic facebook instead of regular facebook, return the same string if
+    the url don't contains facebook"""
+    
     if "m.facebook.com" in url:
         return url.replace("m.facebook.com", "mbasic.facebook.com")
     elif "www.facebook.com" in url:
@@ -17,6 +20,8 @@ def mfacebookToBasic(url):
 
 
 class Person():
+    """Basic class for people's profiles"""
+    
     def __init__(self):
         self.name = ""
         self.profileLink = ""
@@ -35,6 +40,8 @@ class Person():
 
 
 class Post():
+    """Class to contain information about a post"""
+    
     def __init__(self):
         self.posterName = ""
         self.description = ""
@@ -81,8 +88,10 @@ class Post():
 
 
 class FacebookBot(webdriver.PhantomJS):
+    """Main class for browsing facebook"""
+    
     def __init__(self):
-        # pathToPhantomJs = "E:\\ProgramFiles2\\phantomjs-2.0.0-windows\\bin\\phantomjs.exe"
+        # pathToPhantomJs ="
         """relativePhatomJs = "\\phantomjs.exe"
         service_args = None
         if images == False:
@@ -96,18 +105,12 @@ class FacebookBot(webdriver.PhantomJS):
         webdriver.PhantomJS.__init__(self)
 
     def get(self, url):
+        """The make the driver go to the url but reformat the url if is for facebook page"""
         super().get(mfacebookToBasic(url))
 
-    def getScrenshotName(self, s, screenshot, screenshotPath="\\"):
-        if screenshotPath == "\\": screenshotPath = os.getcwd()
-        sf = screenshotPath + s + time.strftime("%a-%d-%m-%Y-%H-%M-%S") + ".jpg"
-        if screenshot:
-            self.save_screenshot(sf)
-            return sf
-        else:
-            return ""
-
-    def login(self, email, password, screenshot=True, screenshotPath="\\"):
+    def login(self, email, password):
+        """Log to facebook using email (str) and password (str)"""
+        
         url = "https://mbasic.facebook.com"
         self.get(url)
         email_element = self.find_element_by_name("email")
@@ -120,35 +123,46 @@ class FacebookBot(webdriver.PhantomJS):
             print("Logged in")
             return True
         except NoSuchElementException as e:
-            print("Fail to log in")
+            print("Fail to login")
             return False
         
 
 
-    def logout(self, screenshot=True, screenshotPath="\\"):
+    def logout(self):
+        """Log out from Facebook"""
+        
         url = "https://mbasic.facebook.com/logout.php?h=AffSEUYT5RsM6bkY&t=1446949608&ref_component=mbasic_footer&ref_page=%2Fwap%2Fhome.php&refid=7"
-        self.get(url)
-        return self.getScrenshotName("Logout_", screenshot, screenshotPath)
+        try:
+            self.get(url)
+            return True
+        except Exception as e:
+            print("Failed to log out ->\n",e)
+            return False
 
 
     def postTextToURL(self, text, url):
-        self.get(url)
-        textbox = self.find_element_by_name("xc_message")
-        textbox.send_keys(text)
-        submit = self.find_element_by_name("view_post")
-        submit.click()
-        try: 
-            self.find_element_by_id("m_home_notice")
-            print("Text posted")
+        """Post text(str) to url (str), url can be a group, fan page or profile"""
+        
+        try:
+            self.get(url)
+            textbox = self.find_element_by_name("xc_message")
+            textbox.send_keys(text)
+            submit = self.find_element_by_name("view_post")
+            submit.click()
             return True
-        except NoSuchElementException as e:
-            print("Failed to post")
+        except Exception as e:
+            print("Failed to post in ",url,"->\n",e)
             return False
 
     def postTextToTimeline(self, text):
+        """Shortcut to post in your own timeline"""
+        
         url = "https://mbasic.facebook.com/"
         return self.postTextToURL(text,url)
+        
     def newMessageToFriend(self, friendname, message, image1=None, image2=None, image3=None):
+        """Send message(str) to friend name (str), images doesn work in phantomjs"""
+        
         url = "https://mbasic.facebook.com/friends/selector/?return_uri=%2Fmessages%2Fcompose%2F&cancel_uri=https%3A%2F%2Fm.facebook.com%2Fmessages%2F&friends_key=ids&context=select_friend_timeline&refid=11"
         self.get(url)
         q = self.find_element_by_name("query")
@@ -170,7 +184,9 @@ class FacebookBot(webdriver.PhantomJS):
         send.send_keys(Keys.ENTER)
         return True
 
-    def getPostInGroup(self, url, deep=2, screenshot=True, screenshotPath="\\"):
+    def getPostInGroup(self, url, deep=2):
+        """Get a list of posts (list:Post) in group url(str) iterating deep(int) times in the group"""
+        
         self.get(url)
         ids = [4, 5, 6, 7, 9]
         posts = []
@@ -213,16 +229,22 @@ class FacebookBot(webdriver.PhantomJS):
         #return posts, self.getScrenshotName("PostsIn" + self.title, screenshot, screenshotPath)
         return posts
 
-    def postInGroup(self, groupURL, text, screenshot=False, screenshotPath="\\"):
+    def postInGroup(self, groupURL, text):
+        """Post text(str) in a group"""
+        
         self.get(groupURL)
-        tf = self.find_element_by_name("xc_message")
+        try:
+            tf = self.find_element_by_name("xc_message")
+        except NoSuchElementException:
+            print(" Group url doesn't exist or you don't have permissions to see it")
+            return False
         tf.send_keys(text)
         self.find_element_by_name("view_post").send_keys(Keys.ENTER)
-        return self.getScrenshotName("PostI_" + self.title, screenshot, screenshotPath)
+        return True
 
     def postImageInGroup(self, url, text, image1, image2="", image3=""):
+        """Post image(str) in a group(url:str) with the text(str), doesn't work in phantomJS"""
         self.get(url)
-        print("in url")
         v = self.find_element_by_name("view_photo")
         v.send_keys(Keys.ENTER)
         self.save_screenshot("debug.jpg")
@@ -232,22 +254,18 @@ class FacebookBot(webdriver.PhantomJS):
         i1.send_keys(image1)
         i2.send_keys(image2)
         i3.send_keys(image3)
-        print("before filters")
         filter = self.find_element_by_name("filter_type")
         filter.value_of_css_property(0)
-        print("af¡ter filter")
-        self.save_screenshot("debug.jpg")
         pre = self.find_element_by_name("add_photo_done")
-        print("click")
         pre.click()
         m = self.find_element_by_name("xc_message")
         m.send_keys(text)
         vp = self.find_element_by_name("view_post")
         vp.click()
-        self.save_screenshot("debug.jpg")
         return True
 
-    def commentInPost(self, postUrl, text, screenshot=True, screenshotPath="\\"):
+    def commentInPost(self, postUrl, text):
+        """Comment a text(str) in a post(str)"""
         try:
             self.get(postUrl)
             tb = self.find_element_by_name("comment_text")
@@ -256,7 +274,10 @@ class FacebookBot(webdriver.PhantomJS):
             return self.getScrenshotName("CommentingIn_" + self.title, screenshot, screenshotPath)
         except Exception as e:
             print("Can't comment in ",postUrl,"\n->",e)
+            
     def getGroupMembers(self, url, deep=3, start=0):
+        """Return a list of members of a group(url) as a list:Person iterat deep(int) times"""
+        
         seeMembersUrl = url + "?view=members&amp;refid=18"
         groupId = url.split("groups/")[1]
         step = 28
@@ -286,6 +307,7 @@ class FacebookBot(webdriver.PhantomJS):
         return members
 
     def sendFriendRequest(self, url):
+        """Send a friend request to a profile(str)"""
         self.get(url)
         try:
             bz = self.find_element_by_class_name("bz")
@@ -296,10 +318,16 @@ class FacebookBot(webdriver.PhantomJS):
             # print("Can't add friend")
             return False
 
-    def messageToUrl(self, url, text, screenshot=True, screenshotPath="\\"):
+    def messageToUrl(self, url, text):
+        """Message a profile/fanpage (str) with text(str)"""
+        
         self.get(url)
         name = self.title
-        mb = self.find_elements_by_class_name("bx")
+        try:
+            mb = self.find_elements_by_class_name("bx")
+        except NoSuchElementException:
+            print("Can't message to ",name)
+            return False
         mm = None
         for m in mb:
             if "messages" in m.get_attribute('href'):
@@ -309,11 +337,11 @@ class FacebookBot(webdriver.PhantomJS):
         b = self.find_element_by_name("body")
         b.send_keys(text)
         self.find_element_by_name("Send").click()
-        return self.getScrenshotName("MessageTo_" + name, screenshot, screenshotPath)
+        return True
 
     def getGroups(self):
         """
-        return {Str: groupName:(Str: urlToGroup, Int: numberOfNotificactions)}"""
+        Return a list of url of the groups your account belong to"""
         url = "https://m.facebook.com/groups/?seemore"
         # g = {"name": ("url", 0)}
         g = dict()
@@ -335,7 +363,8 @@ class FacebookBot(webdriver.PhantomJS):
 
     def getSuggestedGroups(self, sendrequest=False):
         """
-        return {groupName:(description,linkToGroup,linkTorequest)}"""
+        Return a list of suggested groups and optionally send a request to join"""
+        
         url = "https://m.facebook.com/groups/"
         g = dict()
         self.get(url)
@@ -355,7 +384,9 @@ class FacebookBot(webdriver.PhantomJS):
                 except Exception:
                     print("Fail to send request to: ", r)
         return g
-    def getPostInProfile(self,profileURL,deep=100,moreText="Mostrar"):
+        
+    def getPostInProfile(self,profileURL,deep=100,moreText="Mostrar",sharedText=("shared","comparti","compartio")):
+        """Return a list of Posts in a profile/fanpage , setup the "moreText" using your language, theres not elegant way to handle that"""
         pList=list()
         self.get(profileURL)
         #DEEP1
@@ -375,7 +406,7 @@ class FacebookBot(webdriver.PhantomJS):
                     tFi=""
                     for k in tspl:
                         tFi+=k
-                    if "shared" in tFi or "comparti" in tFi or "compartio" in tFi:
+                    if sharedText[0] in tFi or sharedText[1] in tFi or sharedText[2] in tFi:
                         continue
                     if tFi not in pList:
                         pList.append(tFi)
@@ -390,5 +421,4 @@ class FacebookBot(webdriver.PhantomJS):
                 self.get(link)
             except:
                 pass
-            self.save_screenshot(os.path.join("screen","capture_"+str(d)+".png"))
         return pList
