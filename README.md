@@ -5,20 +5,20 @@ All the functions are made scrapping and parsing mbasic.facebook.com
 
 ## Available functions:
 
-    *Login
-    *Logout
-	*Post in your timeline
-	*Message friends
-	*Get post in a facebook group
-	*Post in a facebook group
-	*Comment in a post
-	*Get the members of a facebook group
-	*Send friend request
-	*Send message to any person
-	*Get all post from a profile/fanpage
-	*Send group request
-	*Get number of likes and coments in a post
-	
+    Login
+    Logout
+	Post in your timeline
+	Message friends
+	Get post in a facebook group
+	Post in a facebook group
+	Comment in a post
+	Get the members of a facebook group
+	Send friend request
+	Send message to any person
+	Get all post from a profile/fanpage
+	Send group request
+	Get number of likes and coments in a post
+	Post in a fanpage/friend timeline
     
 ## Basic usage example:
 
