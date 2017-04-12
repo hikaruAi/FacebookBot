@@ -3,25 +3,27 @@ from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.keys import Keys
 import time
-import os, json
+import os
+import json
 
 selfProfile = "https://mbasic.facebook.com/profile.php?fref=pb"
+
 
 def mfacebookToBasic(url):
     """Reformat a url to load mbasic facebook instead of regular facebook, return the same string if
     the url don't contains facebook"""
-    
+
     if "m.facebook.com" in url:
         return url.replace("m.facebook.com", "mbasic.facebook.com")
     elif "www.facebook.com" in url:
-        return url.replace("www.facebook.com","mbasic.facebook.com")
+        return url.replace("www.facebook.com", "mbasic.facebook.com")
     else:
         return url
 
 
 class Person():
     """Basic class for people's profiles"""
-    
+
     def __init__(self):
         self.name = ""
         self.profileLink = ""
@@ -41,7 +43,7 @@ class Person():
 
 class Post():
     """Class to contain information about a post"""
-    
+
     def __init__(self):
         self.posterName = ""
         self.description = ""
@@ -89,7 +91,7 @@ class Post():
 
 class FacebookBot(webdriver.PhantomJS):
     """Main class for browsing facebook"""
-    
+
     def __init__(self):
         # pathToPhantomJs ="
         """relativePhatomJs = "\\phantomjs.exe"
@@ -110,7 +112,7 @@ class FacebookBot(webdriver.PhantomJS):
 
     def login(self, email, password):
         """Log to facebook using email (str) and password (str)"""
-        
+
         url = "https://mbasic.facebook.com"
         self.get(url)
         email_element = self.find_element_by_name("email")
@@ -125,24 +127,21 @@ class FacebookBot(webdriver.PhantomJS):
         except NoSuchElementException as e:
             print("Fail to login")
             return False
-        
-
 
     def logout(self):
         """Log out from Facebook"""
-        
+
         url = "https://mbasic.facebook.com/logout.php?h=AffSEUYT5RsM6bkY&t=1446949608&ref_component=mbasic_footer&ref_page=%2Fwap%2Fhome.php&refid=7"
         try:
             self.get(url)
             return True
         except Exception as e:
-            print("Failed to log out ->\n",e)
+            print("Failed to log out ->\n", e)
             return False
-
 
     def postTextToURL(self, text, url):
         """Post text(str) to url (str), url can be a group, fan page or profile"""
-        
+
         try:
             self.get(url)
             textbox = self.find_element_by_name("xc_message")
@@ -151,24 +150,31 @@ class FacebookBot(webdriver.PhantomJS):
             submit.click()
             return True
         except Exception as e:
-            print("Failed to post in ",url,"->\n",e)
+            print("Failed to post in ", url, "->\n", e)
             return False
 
     def postTextToTimeline(self, text):
         """Shortcut to post in your own timeline"""
-        
+
         url = "https://mbasic.facebook.com/"
-        return self.postTextToURL(text,url)
-        
-    def newMessageToFriend(self, friendname, message, image1=None, image2=None, image3=None):
+        return self.postTextToURL(text, url)
+
+    def newMessageToFriend(
+            self,
+            friendname,
+            message,
+            image1=None,
+            image2=None,
+            image3=None):
         """Send message(str) to friend name (str), images doesn work in phantomjs"""
-        
+
         url = "https://mbasic.facebook.com/friends/selector/?return_uri=%2Fmessages%2Fcompose%2F&cancel_uri=https%3A%2F%2Fm.facebook.com%2Fmessages%2F&friends_key=ids&context=select_friend_timeline&refid=11"
         self.get(url)
         q = self.find_element_by_name("query")
         q.send_keys(friendname)
         q.send_keys(Keys.ENTER)
-        id = self.page_source.split("/messages/compose/?ids=")[1].split('"><span>')[0].split('"><span>')[0]
+        id = self.page_source.split(
+            "/messages/compose/?ids=")[1].split('"><span>')[0].split('"><span>')[0]
         url = "https://mbasic.facebook.com/messages/compose/?ids=" + id
         self.get(url)
         t = self.find_element_by_name("body")
@@ -177,22 +183,25 @@ class FacebookBot(webdriver.PhantomJS):
         f1 = self.find_element_by_name("file1")
         f2 = self.find_element_by_name("file2")
         f3 = self.find_element_by_name("file3")
-        if image1 != None: f1.send_keys(image1)
-        if image2 != None: f2.send_keys(image2)
-        if image3 != None: f3.send_keys(image3)
+        if image1 is not None:
+            f1.send_keys(image1)
+        if image2 is not None:
+            f2.send_keys(image2)
+        if image3 is not None:
+            f3.send_keys(image3)
         send = self.find_element_by_name("Send")
         send.send_keys(Keys.ENTER)
         return True
 
     def getPostInGroup(self, url, deep=2):
         """Get a list of posts (list:Post) in group url(str) iterating deep(int) times in the group"""
-        
+
         self.get(url)
         ids = [4, 5, 6, 7, 9]
         posts = []
         for n in range(deep):
             for i in ids:
-                #print(i)
+                # print(i)
                 post = Post()
                 try:
                     p = self.find_element_by_id("u_0_" + str(i))
@@ -205,10 +214,11 @@ class FacebookBot(webdriver.PhantomJS):
                         post.numLikes = 0
                     # post.description = p.find_element_by_tag_name("p").text
                     post.time = p.find_element_by_tag_name("abbr").text
-                    post.privacy = self.title  # p.text.split("· ")[1].split("\n")[0]
+                    # p.text.split("· ")[1].split("\n")[0]
+                    post.privacy = self.title
                     post.posterLink = a[0].get_attribute('href')
-                    post.linkToComment = a[2].get_attribute(
-                        'href')  # p.find_element_by_class_name("du").get_attribute('href')
+                    # p.find_element_by_class_name("du").get_attribute('href')
+                    post.linkToComment = a[2].get_attribute('href')
                     post.linkToLike = a[4].get_attribute('href')
                     try:
                         post.numComents = int(a[5].text.split(" ")[0])
@@ -221,17 +231,19 @@ class FacebookBot(webdriver.PhantomJS):
                 except Exception:
                     continue
             try:
-                more = self.find_element_by_class_name("dm").find_elements_by_tag_name("a")[0].get_attribute('href')
+                more = self.find_element_by_class_name("dm").find_elements_by_tag_name("a")[
+                    0].get_attribute('href')
                 self.get(more)
             except Exception:
                 pass
                 #print("can't get more :(")
-        #return posts, self.getScrenshotName("PostsIn" + self.title, screenshot, screenshotPath)
+        # return posts, self.getScrenshotName("PostsIn" + self.title,
+        # screenshot, screenshotPath)
         return posts
 
     def postInGroup(self, groupURL, text):
         """Post text(str) in a group"""
-        
+
         self.get(groupURL)
         try:
             tf = self.find_element_by_name("xc_message")
@@ -271,13 +283,14 @@ class FacebookBot(webdriver.PhantomJS):
             tb = self.find_element_by_name("comment_text")
             tb.send_keys(text)
             tb.send_keys(Keys.ENTER)
-            return self.getScrenshotName("CommentingIn_" + self.title, screenshot, screenshotPath)
+            return self.getScrenshotName(
+                "CommentingIn_" + self.title, screenshot, screenshotPath)
         except Exception as e:
-            print("Can't comment in ",postUrl,"\n->",e)
-            
+            print("Can't comment in ", postUrl, "\n->", e)
+
     def getGroupMembers(self, url, deep=3, start=0):
         """Return a list of members of a group(url) as a list:Person iterat deep(int) times"""
-        
+
         seeMembersUrl = url + "?view=members&amp;refid=18"
         groupId = url.split("groups/")[1]
         step = 28
@@ -293,9 +306,11 @@ class FacebookBot(webdriver.PhantomJS):
                 person = Person()
                 h3 = b.find_elements_by_tag_name("h3")
                 person.name = h3[0].text
-                person.profileLink = h3[0].find_element_by_tag_name("a").get_attribute('href')
+                person.profileLink = h3[0].find_element_by_tag_name(
+                    "a").get_attribute('href')
                 try:
-                    person.addLink = b.find_elements_by_tag_name("a")[1].get_attribute('href')  # puede haber error
+                    person.addLink = b.find_elements_by_tag_name(
+                        "a")[1].get_attribute('href')  # puede haber error
                 except Exception:
                     # print("No Addlink")
                     pass
@@ -320,13 +335,13 @@ class FacebookBot(webdriver.PhantomJS):
 
     def messageToUrl(self, url, text):
         """Message a profile/fanpage (str) with text(str)"""
-        
+
         self.get(url)
         name = self.title
         try:
             mb = self.find_elements_by_class_name("bx")
         except NoSuchElementException:
-            print("Can't message to ",name)
+            print("Can't message to ", name)
             return False
         mm = None
         for m in mb:
@@ -364,17 +379,21 @@ class FacebookBot(webdriver.PhantomJS):
     def getSuggestedGroups(self, sendrequest=False):
         """
         Return a list of suggested groups and optionally send a request to join"""
-        
+
         url = "https://m.facebook.com/groups/"
         g = dict()
         self.get(url)
         bq = self.find_elements_by_class_name("bq")[-1]
         li = bq.find_elements_by_tag_name("li")
         for l in li:
-            nombre = l.find_elements_by_tag_name("td")[0].find_elements_by_tag_name("a")[0].text
-            description = l.find_elements_by_tag_name("td")[0].find_elements_by_class_name("bx")[0].text
-            linkToGroup = l.find_elements_by_tag_name("td")[0].find_element_by_tag_name("a").get_attribute('href')
-            linkToRequest = l.find_elements_by_tag_name("td")[-1].find_element_by_tag_name("a").get_attribute('href')
+            nombre = l.find_elements_by_tag_name(
+                "td")[0].find_elements_by_tag_name("a")[0].text
+            description = l.find_elements_by_tag_name(
+                "td")[0].find_elements_by_class_name("bx")[0].text
+            linkToGroup = l.find_elements_by_tag_name(
+                "td")[0].find_element_by_tag_name("a").get_attribute('href')
+            linkToRequest = l.find_elements_by_tag_name(
+                "td")[-1].find_element_by_tag_name("a").get_attribute('href')
             g[nombre] = (description, linkToGroup, linkToRequest)
         if sendrequest:
             for r in g:
@@ -384,41 +403,49 @@ class FacebookBot(webdriver.PhantomJS):
                 except Exception:
                     print("Fail to send request to: ", r)
         return g
-        
-    def getPostInProfile(self,profileURL,deep=100,moreText="Mostrar",sharedText=("shared","comparti","compartio")):
+
+    def getPostInProfile(
+        self,
+        profileURL,
+        deep=100,
+        moreText="Mostrar",
+        sharedText=(
+            "shared",
+            "comparti",
+            "compartio")):
         """Return a list of Posts in a profile/fanpage , setup the "moreText" using your language, theres not elegant way to handle that"""
-        pList=list()
+        pList = list()
         self.get(profileURL)
-        #DEEP1
-        n=0
-        for d in range (deep):
+        # DEEP1
+        n = 0
+        for d in range(deep):
             try:
-                for i in (3,4,5,6,7):
+                for i in (3, 4, 5, 6, 7):
                     try:
-                        e=self.find_element_by_id("u_0_" + str(i))
-                        tU=str( e.text)
+                        e = self.find_element_by_id("u_0_" + str(i))
+                        tU = str(e.text)
                     except Exception:
                         continue
                     try:
-                        tspl=tU.split(self.title)[1].split("\n")[:-3]
+                        tspl = tU.split(self.title)[1].split("\n")[:-3]
                     except IndexError:
-                        continue 
-                    tFi=""
+                        continue
+                    tFi = ""
                     for k in tspl:
-                        tFi+=k
+                        tFi += k
                     if sharedText[0] in tFi or sharedText[1] in tFi or sharedText[2] in tFi:
                         continue
                     if tFi not in pList:
                         pList.append(tFi)
-                        n+=1
-                        print(n,"-\n",tFi)
+                        n += 1
+                        print(n, "-\n", tFi)
                     else:
                         continue
-                ###press more
-                
-                al=self.find_element_by_partial_link_text(moreText)
-                link=al.get_attribute('href')
+                # press more
+
+                al = self.find_element_by_partial_link_text(moreText)
+                link = al.get_attribute('href')
                 self.get(link)
-            except:
+            except BaseException:
                 pass
         return pList
