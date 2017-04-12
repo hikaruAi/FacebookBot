@@ -1,4 +1,4 @@
-FacebookWebBot
+#FacebookWebBot
 =======================
 A simple library to automatize facebook without the official API
 All the functions are made scrapping and parsing mbasic.facebook.com
@@ -24,7 +24,7 @@ Available functions:
 
     Send message to any person
     
-Basic usage example:
+#Basic usage example:
 
 from FacebookWebBot import *
 bot=FacebookBot()
