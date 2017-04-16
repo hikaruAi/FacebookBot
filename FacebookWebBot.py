@@ -2,6 +2,7 @@
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 import time
 import os
 import json
@@ -46,7 +47,7 @@ class Post():
 
     def __init__(self):
         self.posterName = ""
-        self.description = ""
+        self.text = ""
         self.numLikes = 0
         self.time = ""
         self.privacy = ""
@@ -77,7 +78,7 @@ class Post():
 
     def __str__(self):
         s = "\nPost by " + self.posterName + ": "
-        s += self.description + "\n"
+        s += self.text + "\n"
         s += "Likes: " + str(self.numLikes) + " - "
         s += "Comments: " + str(self.numComents) + " - "
         s += self.time + " "
@@ -87,6 +88,13 @@ class Post():
 
     def __repr__(self):
         return self.__str__()
+
+
+dcap = dict(DesiredCapabilities.PHANTOMJS)
+dcap["phantomjs.page.settings.userAgent"] = (
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/53 "
+    "(KHTML, like Gecko) Chrome/15.0.87"
+)
 
 
 class FacebookBot(webdriver.PhantomJS):
@@ -104,7 +112,7 @@ class FacebookBot(webdriver.PhantomJS):
             path = pathToPhantomJs
             webdriver.PhantomJS.__init__(self, path, service_args=service_args)
         """
-        webdriver.PhantomJS.__init__(self)
+        webdriver.PhantomJS.__init__(self, desired_capabilities=dcap)
 
     def get(self, url):
         """The make the driver go to the url but reformat the url if is for facebook page"""
@@ -193,13 +201,15 @@ class FacebookBot(webdriver.PhantomJS):
         send.send_keys(Keys.ENTER)
         return True
 
-    def getPostInGroup(self, url, deep=2):
-        """Get a list of posts (list:Post) in group url(str) iterating deep(int) times in the group"""
+    def getPostInGroup(self, url, deep=2, moreText="Ver más publicaciones"):
+        """Get a list of posts (list:Post) in group url(str) iterating deep(int) times in the group
+        pass moreText depending of your language, i couldn't find a elegant solution for this"""
 
         self.get(url)
         ids = [4, 5, 6, 7, 9]
         posts = []
         for n in range(deep):
+            #print("Searching, deep ",n)
             for i in ids:
                 # print(i)
                 post = Post()
@@ -212,7 +222,7 @@ class FacebookBot(webdriver.PhantomJS):
                         post.numLikes = int(a[3].text.split(" ")[0])
                     except ValueError:
                         post.numLikes = 0
-                    # post.description = p.find_element_by_tag_name("p").text
+                    post.text = p.find_element_by_tag_name("p").text
                     post.time = p.find_element_by_tag_name("abbr").text
                     # p.text.split("· ")[1].split("\n")[0]
                     post.privacy = self.title
@@ -227,18 +237,18 @@ class FacebookBot(webdriver.PhantomJS):
                     # post.linkToShare = a[5].get_attribute('href')
                     post.linkToLikers = a[1].get_attribute('href')
                     post.linkToMore = a[6].get_attribute('href')
-                    posts.append(post)
+                    if post not in posts:
+                        posts.append(post)
                 except Exception:
                     continue
             try:
-                more = self.find_element_by_class_name("dm").find_elements_by_tag_name("a")[
-                    0].get_attribute('href')
+                more = self.find_element_by_partial_link_text(
+                    moreText).get_attribute('href')
                 self.get(more)
-            except Exception:
-                pass
-                #print("can't get more :(")
-        # return posts, self.getScrenshotName("PostsIn" + self.title,
-        # screenshot, screenshotPath)
+            # self.find_element_by_partial_link_text(moreText)
+            except Exception as e:
+                print(e)
+                print(" Can't get more posts")
         return posts
 
     def postInGroup(self, groupURL, text):
