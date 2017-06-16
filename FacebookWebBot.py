@@ -117,6 +117,7 @@ class FacebookBot(webdriver.PhantomJS):
     def get(self, url):
         """The make the driver go to the url but reformat the url if is for facebook page"""
         super().get(mfacebookToBasic(url))
+        self.save_screenshot("Debug.png")
 
     def login(self, email, password):
         """Log to facebook using email (str) and password (str)"""
@@ -459,3 +460,55 @@ class FacebookBot(webdriver.PhantomJS):
             except BaseException:
                 pass
         return pList
+    def getAlbums(self,profileURL):
+    	self.get(profileURL+"/photos/?refid=17")
+    	more=bot.find_element_by_class_name("cb")
+    	self.get(more.find_element_by_tag_name("a").get_attribute('href'))
+    	a=bot.find_elements_by_class_name("t")
+    	alb=dict()
+    	for aa in a:
+    		alb[aa.text]=aa.find_element_by_tag_name("a").get_attribute('href')
+    	#print(alb)
+    	return alb
+    def getPhotosFromAlbum(self,albumURL,direction=1, deep=20):# direction 1= next, -1= previus
+    	self.get(albumURL)
+    	first=self.find_element_by_id("thumbnail_area")
+    	self.get(first.find_element_by_tag_name("a").get_attribute('href'))
+    	imagesURL=list()
+    	tags=["bz","by","ca"]
+    	for n in range(deep):
+    		try:
+    			print("bz")
+    			imageurl=self.find_element_by_class_name("bz").get_attribute('href')
+    			if imageurl==None:
+    				raise Exception
+    		except:
+    			print("CA")
+    			cas=self.find_elements_by_class_name("ca")
+    			print(len(cas))
+    			imageurl=cas[0].get_attribute('href')
+    			print(imageurl)
+    			if imageurl== None:
+    				print(self.current_url)
+    				return
+    		imagesURL.append(imageurl)
+    		td=self.find_elements_by_tag_name("td")
+    		previusURL=td[0].find_element_by_tag_name("a").get_attribute('href')
+    		nextURL=td[1].find_element_by_tag_name("a").get_attribute('href')
+    		#print(nextURL)
+    		#print(previusURL)
+    		if direction==1:
+    			print("Next")
+    			self.get(nextURL)
+    		elif direcction==-1:
+    			print("Previous")
+    			self.get(previusURL)
+    		print(n,"-   ",imageurl)
+    	return imagesURL
+
+if __name__=="__main__":
+	self=FacebookBot()
+	self.login("c")
+	#albums=bot.getAlbums("https://mbasic.facebook.com/nikumikyo.officialpage")
+	photosLinks=self.getPhotosFromAlbum("https://mbasic.facebook.com/nikumikyo.officialpage/albums/1163960900379098/")
+
