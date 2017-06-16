@@ -476,21 +476,25 @@ class FacebookBot(webdriver.PhantomJS):
     	self.get(first.find_element_by_tag_name("a").get_attribute('href'))
     	imagesURL=list()
     	tags=["bz","by","ca"]
+    	truenames=list()
     	for n in range(deep):
+    		print(self.title," - photo...",n+1)
     		try:
-    			print("bz")
-    			imageurl=self.find_element_by_class_name("bz").get_attribute('href')
-    			if imageurl==None:
-    				raise Exception
+    			for t in tags:
+    				imageurl=self.find_elements_by_class_name(t)[0].get_attribute('href')
+    				if imageurl != None:
+    					#print(imageurl)
+    					break
     		except:
-    			print("CA")
-    			cas=self.find_elements_by_class_name("ca")
-    			print(len(cas))
-    			imageurl=cas[0].get_attribute('href')
-    			print(imageurl)
-    			if imageurl== None:
-    				print(self.current_url)
-    				return
+    			print(self.current_url)
+    			return
+    		
+    		truename=imageurl.split("?")[0].split("/")[-1]
+    		if truename in truenames:
+    			print("Repeated...")
+    			break
+    		truenames.append(truename)
+
     		imagesURL.append(imageurl)
     		td=self.find_elements_by_tag_name("td")
     		previusURL=td[0].find_element_by_tag_name("a").get_attribute('href')
@@ -498,17 +502,11 @@ class FacebookBot(webdriver.PhantomJS):
     		#print(nextURL)
     		#print(previusURL)
     		if direction==1:
-    			print("Next")
+    			#print("Next")
     			self.get(nextURL)
     		elif direcction==-1:
-    			print("Previous")
+    			#print("Previous")
     			self.get(previusURL)
-    		print(n,"-   ",imageurl)
+    		#print(n,"-   ",imageurl)
     	return imagesURL
-
-if __name__=="__main__":
-	self=FacebookBot()
-	self.login("c")
-	#albums=bot.getAlbums("https://mbasic.facebook.com/nikumikyo.officialpage")
-	photosLinks=self.getPhotosFromAlbum("https://mbasic.facebook.com/nikumikyo.officialpage/albums/1163960900379098/")
 
